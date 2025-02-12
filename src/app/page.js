@@ -1,36 +1,88 @@
-import { Button } from "@/components/ui/button";
 import Feed from "@/components/Feed";
+import Link from "next/link";
 
 export default function Home() {
   const feedItems = [
     {
       id: 1,
-      title: "The Future of AI",
+      title: "The Future of AI: How Machine Learning is Transforming Industries",
       source: "Tech Daily",
-      description: "An in-depth look at how artificial intelligence is shaping our future and transforming industries across the globe.",
-      imageUrl: "https://picsum.photos/seed/ai/800/600"
+      description: "An in-depth look at how artificial intelligence is shaping our future and transforming industries across the globe, from healthcare to finance.",
+      imageUrl: "https://picsum.photos/seed/ai/800/600",
+      url: "https://techdaily.com/ai-future"
     },
     {
       id: 2,
-      title: "Sustainable Living in 2024",
-      source: "Eco Watch",
-      description: "Practical tips and innovations for maintaining an eco-friendly lifestyle in today's fast-paced world.",
-      imageUrl: "https://picsum.photos/seed/eco/800/600"
+      title: "Climate Change: New Study Shows Accelerated Impact on Ocean Levels",
+      source: "Environmental Report",
+      description: "Scientists reveal alarming new data about the rate of sea level rise and its implications for coastal cities worldwide.",
+      imageUrl: "https://picsum.photos/seed/climate/800/600",
+      url: "https://environmental-report.com/climate-study"
     },
     {
       id: 3,
-      title: "The Rise of Remote Work",
-      source: "Work Insider",
-      description: "How companies are adapting to the new normal of distributed teams and virtual collaboration.",
-      imageUrl: "https://picsum.photos/seed/work/800/600"
+      title: "Space Tourism: First Commercial Flight to ISS Sets New Milestone",
+      source: "Space News",
+      description: "Private space company achieves historic breakthrough with successful civilian mission to the International Space Station.",
+      imageUrl: "https://picsum.photos/seed/space/800/600",
+      url: "https://spacenews.com/space-tourism"
     },
     {
       id: 4,
-      title: "Space Exploration Breakthroughs",
-      source: "Space News",
-      description: "Latest discoveries and achievements in space exploration and astronomical research.",
-      imageUrl: "https://picsum.photos/seed/space/800/600"
+      title: "Global Economy Faces New Challenges Amid Tech Revolution",
+      source: "Financial Times",
+      description: "Economic experts analyze the impact of rapid technological advancement on traditional industries and employment.",
+      imageUrl: "https://picsum.photos/seed/economy/800/600",
+      url: "https://financialtimes.com/global-economy"
     },
+    {
+      id: 5,
+      title: "Revolutionary Battery Technology Could Transform Electric Vehicles",
+      source: "Auto Insider",
+      description: "New solid-state battery development promises to double EV range and cut charging time in half.",
+      imageUrl: "https://picsum.photos/seed/battery/800/600",
+      url: "https://autoinsider.com/battery-technology"
+    },
+    {
+      id: 6,
+      title: "Breakthrough in Quantum Computing Reaches New Milestone",
+      source: "Science Weekly",
+      description: "Researchers achieve quantum supremacy in new experiment, opening doors for revolutionary computing applications.",
+      imageUrl: "https://picsum.photos/seed/quantum/800/600",
+      url: "https://scienceweekly.com/quantum-breakthrough"
+    },
+    {
+      id: 7,
+      title: "Remote Work Trends Reshape Urban Development",
+      source: "Urban Planning Today",
+      description: "Cities adapt to changing work patterns as remote work becomes permanent for many companies.",
+      imageUrl: "https://picsum.photos/seed/city/800/600",
+      url: "https://urbanplanningtoday.com/remote-work-trends"
+    },
+    {
+      id: 8,
+      title: "New Health Study Reveals Benefits of Mediterranean Diet",
+      source: "Health & Wellness",
+      description: "Long-term research confirms significant health improvements linked to Mediterranean eating patterns.",
+      imageUrl: "https://picsum.photos/seed/health/800/600",
+      url: "https://healthandwellness.com/mediterranean-diet"
+    },
+    {
+      id: 9,
+      title: "Cybersecurity Threats Evolve: What You Need to Know",
+      source: "Tech Security",
+      description: "Expert analysis of emerging digital threats and essential protection strategies for individuals and businesses.",
+      imageUrl: "https://picsum.photos/seed/cyber/800/600",
+      url: "https://techsecurity.com/cybersecurity-threats"
+    },
+    {
+      id: 10,
+      title: "Renewable Energy Surpasses Coal in Global Power Generation",
+      source: "Energy Report",
+      description: "Milestone achievement as renewable sources become the primary electricity generator worldwide.",
+      imageUrl: "https://picsum.photos/seed/energy/800/600",
+      url: "https://energyreport.com/renewable-energy"
+    }
   ]
 
   return (
@@ -38,8 +90,7 @@ export default function Home() {
       {/* Simple Header */}
       <header className="border-b">
         <div className="container-tight flex h-14 items-center justify-between">
-          <span className="font-semibold">Logo</span>
-          <Button variant="ghost" size="sm">Menu</Button>
+          <span className="font-semibold">FeedLion</span>
         </div>
       </header>
 
@@ -53,7 +104,10 @@ export default function Home() {
       <footer className="border-t">
         <div className="container-tight flex h-14 items-center justify-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 Your Company
+            <Link href="https://github.com/blanchardjeremy/feedlion">Open Source on GitHub</Link>.
+          </p>{' '}
+          <p className="text-sm text-muted-foreground">
+            Created by <Link href="https://blanchardjeremy.com">Jeremy Blanchard</Link>.
           </p>
         </div>
       </footer>
