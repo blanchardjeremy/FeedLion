@@ -1,7 +1,35 @@
+'use client';
+
+import { useState } from 'react';
 import Feed from "@/components/Feed";
 import Link from "next/link";
 
 export default function Home() {
+  const [userId, setUserId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const createUser = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/users/create', {
+        method: 'POST'
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.error);
+      
+      setUserId(data.userId);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const feedItems = [
     {
       id: 1,
@@ -96,6 +124,33 @@ export default function Home() {
 
       <main className="flex-1">
         <div className="container py-8">
+          {!userId ? (
+            <button
+              onClick={createUser}
+              disabled={isLoading}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            >
+              {isLoading ? 'Creating...' : 'Create New User'}
+            </button>
+          ) : (
+            <div className="p-4 bg-green-100 border border-green-300 rounded">
+              <p className="font-medium text-green-800">Your User ID has been created!</p>
+              <p className="mt-2 font-mono bg-white p-2 rounded border border-green-200">
+                {userId}
+              </p>
+              <p className="mt-2 text-sm text-green-700">
+                ⚠️ Please save this ID - you will need it to access your feeds.
+                You won't be able to recover it if lost.
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <p className="mt-4 text-red-500">
+              Error: {error}
+            </p>
+          )}
+
           <Feed items={feedItems} />
         </div>
       </main>
