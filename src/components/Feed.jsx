@@ -24,6 +24,11 @@ const Feed = async ({ userId }) => {
 
     const items = data?.data.items || [];
     console.log('📊 Feed items count:', items.length);
+    console.log('📖 First few items read status:', items.slice(0, 3).map(item => ({
+      id: item._id,
+      title: item.title,
+      isRead: item.isRead
+    })));
 
     if (items.length === 0) {
       console.log('ℹ️ No feed items found');
@@ -37,6 +42,16 @@ const Feed = async ({ userId }) => {
       );
     }
 
+    // Layout configuration
+    const defaultItemsPerGroup = 3;  // Number of items in default grid layout
+    const compactItemsPerGroup = 5;  // Number of items in compact layout
+    const itemsPerGroup = defaultItemsPerGroup + compactItemsPerGroup;
+    const startIndex = 1;  // Skip featured article
+
+    // Calculate number of groups needed
+    const remainingItems = items.length - startIndex;
+    const numberOfGroups = Math.ceil(remainingItems / itemsPerGroup);
+
     console.log('✅ Rendering feed items');
     return (
       <div className="space-y-8">
@@ -46,33 +61,53 @@ const Feed = async ({ userId }) => {
             <FeedItem
               item={items[0]}
               variant="featured"
+              isRead={items[0].isRead}
+              userId={userId}
             />
           </div>
         )}
 
-        {/* Regular Grid */}
-        {items.length > 1 && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {items.slice(1, 4).map((item) => (
-              <FeedItem
-                key={item._id}
-                item={item}
-                variant="default"
-              />
-            ))}
-          </div>
-        )}
+        {/* Alternating Layout */}
+        {items.length > startIndex && (
+          <div className="space-y-6">
+            {Array.from({ length: numberOfGroups }).map((_, groupIndex) => {
+              const groupStartIndex = startIndex + groupIndex * itemsPerGroup;
+              const defaultEndIndex = groupStartIndex + defaultItemsPerGroup;
+              const compactEndIndex = defaultEndIndex + compactItemsPerGroup;
 
-        {/* Compact Layout */}
-        {items.length > 4 && (
-          <div className="space-y-3">
-            {items.slice(4).map((item) => (
-              <FeedItem
-                key={item._id}
-                item={item}
-                variant="compact"
-              />
-            ))}
+              return (
+                <div key={`group-${groupIndex}`} className="space-y-6">
+                  {/* Default Items Grid */}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {items.slice(groupStartIndex, defaultEndIndex)
+                      .filter(item => item)
+                      .map((item) => (
+                        <FeedItem
+                          key={item._id}
+                          item={item}
+                          variant="default"
+                          isRead={item.isRead}
+                          userId={userId}
+                        />
+                      ))}
+                  </div>
+                  {/* Compact Items List */}
+                  <div className="space-y-3">
+                    {items.slice(defaultEndIndex, compactEndIndex)
+                      .filter(item => item)
+                      .map((item) => (
+                        <FeedItem
+                          key={item._id}
+                          item={item}
+                          variant="compact"
+                          isRead={item.isRead}
+                          userId={userId}
+                        />
+                      ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

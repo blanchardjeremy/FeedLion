@@ -1,8 +1,12 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { format } from 'timeago.js'
+import { fetchAPI } from '@/lib/api'
+import { CircleCheckBig } from 'lucide-react'
 
 // Domains that need image proxying
 const PROXY_DOMAINS = new Set([
@@ -38,7 +42,7 @@ const variants = {
     card: "feed-item-default group overflow-hidden transition-all hover:shadow-lg border-0 h-full",
     imageContainer: "relative h-[250px] w-full overflow-hidden",
     title: "line-clamp-3",
-    content: "flex flex-col flex-1 p-6 bg-secondary transition-colors group-hover:bg-secondary/70 h-full space-y-4",
+    content: "flex flex-col flex-1 p-6 bg-secondary transition-colors h-full space-y-4",
   },
   featured: {
     card: "feed-item-featured group overflow-hidden transition-all hover:shadow-lg border-0 relative h-[400px]",
@@ -54,26 +58,58 @@ const variants = {
   compact: {
     card: "feed-item-compact group overflow-hidden transition-all hover:shadow-lg border-0 grid grid-cols-[2.5fr,1fr] h-2xl md:h-3xl",
     imageContainer: "relative h-full w-full overflow-hidden order-last",
-    content: "p-3 md:p-4 space-y-4 bg-secondary transition-colors group-hover:bg-secondary/70 flex flex-col justify-center",
+    content: "p-3 md:p-4 space-y-4 bg-secondary transition-colors flex flex-col justify-center",
     title: "text-base md:text-lg line-clamp-3",
     description: "line-clamp-2"
   }
 }
 
-const FeedItem = ({ item, variant = "default", className }) => {
+const FeedItem = ({ item, variant = "default", className, isRead = false, userId }) => {
   const styles = variants[variant] || variants.default
   const firstCategory = item.categories?.[0]
 
+  const handleClick = async () => {
+    console.log('🖱️ Handling click for item:', {
+      id: item._id,
+      title: item.title,
+      userId
+    });
+    
+    try {
+      // Call the click API in the background
+      const response = await fetchAPI(`/api/feeds/${userId}/click`, {
+        method: 'POST',
+        body: { itemId: item._id }
+      });
+      console.log('✅ Click tracked successfully:', response);
+    } catch (error) {
+      console.error('❌ Error tracking click:', error);
+    }
+  };
+
   return (
-    <Link href={item.link} className="block">
-      <Card className={cn(styles.card, className)}>
+    <Link href={item.link} className="block relative" onClick={handleClick}>
+      {isRead && (
+        <div className={cn(
+          "absolute z-10",
+          variant === 'compact' ? 'right-3 top-3' : 'left-3 top-3'
+        )}>
+          <CircleCheckBig className="w-6 h-6 text-foreground rounded-full" />
+        </div>
+      )}
+      <Card className={cn(
+        styles.card,
+        isRead && "opacity-30 grayscale-[50%] transition-all duration-200",
+        className
+      )}>
         {/* Image Container */}
         <div className={styles.imageContainer}>
           <img
             src={getProxiedImageUrl(item.imageUrl)}
             alt={item.title}
             className={cn(
-              "h-full w-full absolute inset-0 object-cover duration-300 ease-in-out transition-transform group-hover:scale-105",
+              "h-full w-full absolute inset-0 object-cover duration-300 ease-in-out",
+              !isRead && "transition-transform group-hover:scale-105",
               styles.image
             )}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -81,7 +117,10 @@ const FeedItem = ({ item, variant = "default", className }) => {
         </div>
 
         {/* Content Section */}
-        <div className={styles.content}>
+        <div className={cn(
+          styles.content,
+          !isRead && variant !== 'featured' && "group-hover:bg-secondary/70"
+        )}>
           
           <div className="space-y-2">
             <h3 className={cn(

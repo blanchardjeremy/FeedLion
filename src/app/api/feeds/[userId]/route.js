@@ -46,6 +46,38 @@ export async function GET(request, context) {
     .limit(maxItems)
     .populate('feed', 'title url');
 
+    // Get clicked items within the same time range
+    console.log('🔍 Fetching clicked items...');
+    const clickedItems = await User.findOne(
+      { userId },
+      { 'clickedItems': 1 }
+    );
+    console.log('📦 Clicked items raw:', JSON.stringify(clickedItems?.clickedItems || [], null, 2));
+
+    // Create a Set of clicked item IDs for easy lookup
+    const clickedItemIds = new Set(
+      clickedItems?.clickedItems?.map(click => click.item.toString()) || []
+    );
+    console.log('🎯 Clicked item IDs:', Array.from(clickedItemIds));
+
+    // Add isRead flag to feed items
+    const itemsWithReadStatus = feedItems.map(item => {
+      const isRead = clickedItemIds.has(item._id.toString());
+      console.log(`📖 Item ${item._id}: isRead=${isRead}`);
+      return {
+        ...item.toObject(),
+        isRead
+      };
+    });
+
+    console.log('📊 First few items with read status:', 
+      itemsWithReadStatus.slice(0, 3).map(item => ({
+        id: item._id,
+        title: item.title,
+        isRead: item.isRead
+      }))
+    );
+
     console.log('📊 Feed items found:', feedItems.length);
     console.log('📅 Latest item date:', feedItems[0]?.pubDate || 'No items');
     console.log('📅 Oldest item date:', feedItems[feedItems.length - 1]?.pubDate || 'No items');
@@ -53,7 +85,7 @@ export async function GET(request, context) {
     return Response.json({
       success: true,
       data: {
-        items: feedItems,
+        items: itemsWithReadStatus,
         preferences: {
           maxItems,
           maxDays

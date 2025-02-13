@@ -88,69 +88,69 @@ export async function GET(request, context) {
               : [item.categories];
           }
 
-          // Extract the largest image from media:content or media:thumbnail
-          const mediaContent = item['media:content'] || item.media?.content || item['media:group']?.['media:content'];
-          const mediaThumbnail = item['media:thumbnail'];
-          
-          let mediaItems = [];
-          
-          // Add media:content items
-          if (mediaContent) {
-            console.log(`🖼️ Found media:content for item: ${item.title}`);
-            console.log('Raw media:content:', JSON.stringify(mediaContent, null, 2));
-            
-            const contentItems = Array.isArray(mediaContent) ? mediaContent : [mediaContent];
-            // Filter out empty media:content items
-            mediaItems.push(...contentItems.filter(item => item && (item.$ || item.url)));
-          }
-          
-          // Add media:thumbnail items
-          if (mediaThumbnail) {
-            console.log(`🖼️ Found media:thumbnail for item: ${item.title}`);
-            console.log('Raw media:thumbnail:', JSON.stringify(mediaThumbnail, null, 2));
-            
-            const thumbnailItems = Array.isArray(mediaThumbnail) ? mediaThumbnail : [mediaThumbnail];
-            mediaItems.push(...thumbnailItems);
-          }
-          
-          if (mediaItems.length > 0) {
-            console.log(`📊 Number of media items: ${mediaItems.length}`);
-            console.log('Media items array:', JSON.stringify(mediaItems, null, 2));
-
-            // Find the image with the largest width
-            const largestImage = mediaItems.reduce((largest, current) => {
-              console.log('\nProcessing media item:', JSON.stringify(current, null, 2));
-              // Handle both formats: direct attributes or nested $ object
-              const currentAttrs = current.$ || current;
-              const largestAttrs = largest?.$ || largest;
-              
-              const currentWidth = parseInt(currentAttrs?.width || 0);
-              const largestWidth = parseInt(largestAttrs?.width || 0);
-              
-              console.log(`Current width: ${currentWidth}, Largest width so far: ${largestWidth}`);
-              return currentWidth > largestWidth ? current : largest;
-            }, null);
-
-            if (largestImage) {
-              // Handle both formats: direct url or nested $ object
-              const imageAttrs = largestImage.$ || largestImage;
-              feedItem.imageUrl = imageAttrs.url;
-              console.log(`✅ Selected image URL: ${feedItem.imageUrl}`);
-            } else {
-              console.log('❌ No valid image found in media items');
-            }
+          // Check for enclosure first
+          if (item.enclosure?.url && item.enclosure.type?.startsWith('image/')) {
+            console.log('🖼️ Found image in enclosure:', item.enclosure.url);
+            feedItem.imageUrl = item.enclosure.url;
           } else {
-            console.log(`ℹ️ No media items found for item: ${item.title}`);
+            // Extract the largest image from media:content or media:thumbnail
+            const mediaContent = item['media:content'] || item.media?.content || item['media:group']?.['media:content'];
+            const mediaThumbnail = item['media:thumbnail'];
             
-            // Try to find image in content as fallback
-            if (item.content) {
-              console.log('🔍 Attempting to find image in content...');
-              const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-              if (imgMatch) {
-                feedItem.imageUrl = imgMatch[1];
-                console.log(`✅ Found fallback image in content: ${feedItem.imageUrl}`);
+            let mediaItems = [];
+            
+            // Add media:content items
+            if (mediaContent) {
+              
+              const contentItems = Array.isArray(mediaContent) ? mediaContent : [mediaContent];
+              // Filter out empty media:content items
+              mediaItems.push(...contentItems.filter(item => item && (item.$ || item.url)));
+            }
+            
+            // Add media:thumbnail items
+            if (mediaThumbnail) {
+              
+              const thumbnailItems = Array.isArray(mediaThumbnail) ? mediaThumbnail : [mediaThumbnail];
+              mediaItems.push(...thumbnailItems);
+            }
+            
+            if (mediaItems.length > 0) {
+
+              // Find the image with the largest width
+              const largestImage = mediaItems.reduce((largest, current) => {
+                console.log('\nProcessing media item:', JSON.stringify(current, null, 2));
+                // Handle both formats: direct attributes or nested $ object
+                const currentAttrs = current.$ || current;
+                const largestAttrs = largest?.$ || largest;
+                
+                const currentWidth = parseInt(currentAttrs?.width || 0);
+                const largestWidth = parseInt(largestAttrs?.width || 0);
+                
+                console.log(`Current width: ${currentWidth}, Largest width so far: ${largestWidth}`);
+                return currentWidth > largestWidth ? current : largest;
+              }, null);
+
+              if (largestImage) {
+                // Handle both formats: direct url or nested $ object
+                const imageAttrs = largestImage.$ || largestImage;
+                feedItem.imageUrl = imageAttrs.url;
+                console.log(`✅ Selected image URL: ${feedItem.imageUrl}`);
               } else {
-                console.log('❌ No image found in content');
+                console.log('❌ No valid image found in media items');
+              }
+            } else {
+              console.log(`ℹ️ No media items found for item: ${item.title}`);
+              
+              // Try to find image in content as fallback
+              if (item.content) {
+                console.log('🔍 Attempting to find image in content...');
+                const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
+                if (imgMatch) {
+                  feedItem.imageUrl = imgMatch[1];
+                  console.log(`✅ Found fallback image in content: ${feedItem.imageUrl}`);
+                } else {
+                  console.log('❌ No image found in content');
+                }
               }
             }
           }
