@@ -2,25 +2,37 @@
 
 import { useState } from 'react';
 import { fetchAPI } from '@/lib/api';
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 
 export default function AddFeedForm({ userId }) {
-  const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  
+  const form = useForm({
+    defaultValues: {
+      feedUrl: '',
+    },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setIsLoading(true);
-    setError('');
 
     const { error: apiError } = await fetchAPI('/api/feeds/subscribe', {
-      body: { feedUrl: url, userId }
+      body: { feedUrl: data.feedUrl, userId }
     });
 
     if (apiError) {
-      setError(apiError);
+      form.setError('feedUrl', { message: apiError });
     } else {
-      setUrl('');
+      form.reset();
       window.location.reload();
     }
     
@@ -30,27 +42,31 @@ export default function AddFeedForm({ userId }) {
   return (
     <div className="mt-8">
       <h2 className="text-xl font-bold mb-4">Add New Feed</h2>
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Enter RSS feed URL"
-          className="flex-1 p-2 border rounded"
-          required
-          disabled={isLoading}
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Adding...' : 'Add Feed'}
-        </button>
-      </form>
-      {error && (
-        <p className="mt-2 text-red-600 text-sm">{error}</p>
-      )}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
+          <FormField
+            control={form.control}
+            name="feedUrl"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormControl>
+                  <Input
+                    type="url"
+                    placeholder="Enter RSS feed URL"
+                    disabled={isLoading}
+                    required
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'Adding...' : 'Add Feed'}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 } 

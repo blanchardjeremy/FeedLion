@@ -1,6 +1,7 @@
 import { connectDB } from '@/lib/db';
 import { User } from '@/models';
 import AddFeedForm from '@/components/AddFeedForm';
+import Feed from '@/components/Feed';
 
 export default async function UserFeedPage({ params }) {
   try {
@@ -45,6 +46,8 @@ export default async function UserFeedPage({ params }) {
         )}
         
         <AddFeedForm userId={userId} />
+
+        <Feed userId={userId} />
       </div>
     );
   } catch (error) {
