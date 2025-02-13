@@ -43,6 +43,7 @@ const variants = {
     imageContainer: "relative h-[250px] w-full overflow-hidden",
     title: "line-clamp-3",
     content: "flex flex-col flex-1 p-6 bg-secondary transition-colors h-full space-y-4",
+    category: "absolute bottom-3 left-3 bg-primary-darker shadow-lg px-3 py-1 rounded-full text-primary-foreground  text-sm font-medium"
   },
   featured: {
     card: "feed-item-featured group overflow-hidden transition-all hover:shadow-lg border-0 relative h-[400px]",
@@ -114,6 +115,11 @@ const FeedItem = ({ item, variant = "default", className, isRead = false, userId
             )}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          {firstCategory && variant === 'default' && (
+            <div className={styles.category}>
+              {firstCategory}
+            </div>
+          )}
         </div>
 
         {/* Content Section */}
@@ -123,6 +129,14 @@ const FeedItem = ({ item, variant = "default", className, isRead = false, userId
         )}>
           
           <div className="space-y-2">
+            {firstCategory && variant !== 'default' && (
+              <p className={cn(
+                "text-sm font-medium",
+                variant === 'featured' ? 'text-primary-foreground' : 'text-primary',
+              )}>
+                {firstCategory}
+              </p>
+            )}
             <h3 className={cn(
               "text-xl font-bold leading-tight tracking-tight",
               variant === 'featured' ? 'text-white' : 'text-secondary-foreground',
@@ -146,12 +160,6 @@ const FeedItem = ({ item, variant = "default", className, isRead = false, userId
             <span>{item.feed?.url ? getDomainFromUrl(item.feed.url) : 'Unknown Source'}</span>
             <span>•</span>
             <span>{item.pubDate ? format(new Date(item.pubDate)) : 'Unknown date'}</span>
-            {firstCategory && variant !== 'default' && (
-              <>
-                <span className="hidden md:inline">•</span>
-                <span className="hidden md:inline first-letter:uppercase">{firstCategory}</span>
-              </>
-            )}
           </div>
         </div>
       </Card>
