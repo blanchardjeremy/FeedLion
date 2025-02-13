@@ -34,9 +34,9 @@ export default function RefreshButton({ userId }) {
       onClick={handleRefresh}
       disabled={isRefreshing}
       variant="outline"
-      size="sm"
+      size="icon"
     >
-      <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+      <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
     </Button>
   );
 } 

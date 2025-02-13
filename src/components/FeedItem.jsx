@@ -13,6 +13,11 @@ const PROXY_DOMAINS = new Set([
   'media.wired.com',
 ])
 
+// Domains that need reader mode proxying
+const PAYWALL_BYPASS_DOMAINS = new Set([
+  'nytimes.com',
+])
+
 const getDomainFromUrl = (url) => {
   try {
     const urlObj = new URL(url)
@@ -20,6 +25,22 @@ const getDomainFromUrl = (url) => {
     const parts = urlObj.hostname.split('.')
     const domain = parts.length > 2 ? parts.slice(-2).join('.') : urlObj.hostname
     return domain
+  } catch (e) {
+    return url
+  }
+}
+
+const transformUrl = (url) => {
+  try {
+    const urlObj = new URL(url)
+    // Check if the hostname or any of its parent domains are in the proxy set
+    const needsBypass = Array.from(PAYWALL_BYPASS_DOMAINS).some(domain => 
+      urlObj.hostname.includes(domain)
+    )
+    if (needsBypass) {
+      return `https://proreader.io/search?url=${encodeURIComponent(url)}`
+    }
+    return url
   } catch (e) {
     return url
   }
@@ -43,7 +64,7 @@ const variants = {
     imageContainer: "relative h-[250px] w-full overflow-hidden",
     title: "line-clamp-3",
     content: "flex flex-col flex-1 p-6 bg-secondary transition-colors h-full space-y-4",
-    category: "absolute bottom-3 left-3 bg-primary-darker shadow-lg px-3 py-1 rounded-full text-primary-foreground  text-sm font-medium"
+    category: "absolute bottom-3 left-3 bg-primary shadow-lg px-3 py-1 rounded-full text-primary-foreground  text-sm font-medium"
   },
   featured: {
     card: "feed-item-featured group overflow-hidden transition-all hover:shadow-lg border-0 relative h-[400px]",
@@ -88,8 +109,11 @@ const FeedItem = ({ item, variant = "default", className, isRead = false, userId
     }
   };
 
+  // Transform the URL if needed
+  const transformedUrl = transformUrl(item.link)
+
   return (
-    <Link href={item.link} className="block relative" onClick={handleClick}>
+    <Link href={transformedUrl} className="block relative" onClick={handleClick}>
       {isRead && (
         <div className={cn(
           "absolute z-10",
@@ -132,7 +156,7 @@ const FeedItem = ({ item, variant = "default", className, isRead = false, userId
             {firstCategory && variant !== 'default' && (
               <p className={cn(
                 "text-sm font-medium",
-                variant === 'featured' ? 'text-primary-foreground' : 'text-primary',
+                variant === 'featured' ? 'text-primary-foreground' : 'text-primary-lighter',
               )}>
                 {firstCategory}
               </p>

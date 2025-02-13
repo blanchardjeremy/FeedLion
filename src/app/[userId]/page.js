@@ -5,6 +5,7 @@ import Feed from '@/components/Feed';
 import RefreshButton from '@/components/RefreshButton';
 import ManageFeedsModal from '@/components/ManageFeedsModal';
 import { Spinner } from '@/components/ui/spinner';
+import Header from '@/components/Header';
 
 async function getUserFeeds(userId) {
   await connectDB();
@@ -39,23 +40,22 @@ export default async function UserFeedPage({ params }) {
     }
 
     return (
-      <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Your Feed</h1>
-          <div className="flex items-center">
-            <RefreshButton userId={userId} />
-            <ManageFeedsModal 
-              userId={userId} 
-              subscribedFeeds={JSON.parse(JSON.stringify(userData.subscribedFeeds))}
-              preferences={JSON.parse(JSON.stringify(userData.preferences))}
-            />
-          </div>
+      <>
+        <Header>
+          <RefreshButton userId={userId} />
+          <ManageFeedsModal 
+            userId={userId} 
+            subscribedFeeds={JSON.parse(JSON.stringify(userData.subscribedFeeds))}
+            preferences={JSON.parse(JSON.stringify(userData.preferences))}
+          />
+        </Header>
+
+        <div className="container mx-auto p-4">
+          <Suspense fallback={<Spinner />}>
+            <Feed userId={userId} />
+          </Suspense>
         </div>
-        
-        <Suspense fallback={<Spinner />}>
-          <Feed userId={userId} />
-        </Suspense>
-      </div>
+      </>
     );
   } catch (error) {
     console.error('Error loading user feed:', error);
