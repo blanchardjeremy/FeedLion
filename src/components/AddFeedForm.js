@@ -66,6 +66,7 @@ export default function AddFeedForm({ userId, onSuccess }) {
                     placeholder="Enter RSS feed URL"
                     disabled={isLoading}
                     required
+                    className="bg-muted"
                     {...field}
                   />
                 </FormControl>

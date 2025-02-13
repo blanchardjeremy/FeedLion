@@ -4,6 +4,7 @@ import { User } from '@/models';
 import Feed from '@/components/Feed';
 import RefreshButton from '@/components/RefreshButton';
 import ManageFeedsModal from '@/components/ManageFeedsModal';
+import { Spinner } from '@/components/ui/spinner';
 
 async function getUserFeeds(userId) {
   await connectDB();
@@ -17,15 +18,18 @@ async function getUserFeeds(userId) {
     return null;
   }
 
-  return user.subscribedFeeds;
+  return {
+    subscribedFeeds: user.subscribedFeeds,
+    preferences: user.preferences
+  };
 }
 
 export default async function UserFeedPage({ params }) {
   try {
     const { userId } = await params;
-    const subscribedFeeds = await getUserFeeds(userId);
+    const userData = await getUserFeeds(userId);
 
-    if (!subscribedFeeds) {
+    if (!userData) {
       return (
         <div className="container mx-auto p-4">
           <h1 className="text-2xl font-bold text-red-600">User not found</h1>
@@ -42,12 +46,13 @@ export default async function UserFeedPage({ params }) {
             <RefreshButton userId={userId} />
             <ManageFeedsModal 
               userId={userId} 
-              subscribedFeeds={JSON.parse(JSON.stringify(subscribedFeeds))} 
+              subscribedFeeds={JSON.parse(JSON.stringify(userData.subscribedFeeds))}
+              preferences={JSON.parse(JSON.stringify(userData.preferences))}
             />
           </div>
         </div>
         
-        <Suspense fallback={<div>Loading feed...</div>}>
+        <Suspense fallback={<Spinner />}>
           <Feed userId={userId} />
         </Suspense>
       </div>

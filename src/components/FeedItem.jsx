@@ -82,20 +82,6 @@ const FeedItem = ({ item, variant = "default", className }) => {
 
         {/* Content Section */}
         <div className={styles.content}>
-          <div className={cn(
-            "flex items-center space-x-2 text-xs",
-            variant === 'featured' ? 'text-gray-200/70' : 'text-muted-foreground/70'
-          )}>
-            <span>{item.feed?.url ? getDomainFromUrl(item.feed.url) : 'Unknown Source'}</span>
-            <span>•</span>
-            <span>{item.pubDate ? format(new Date(item.pubDate)) : 'Unknown date'}</span>
-            {firstCategory && variant !== 'default' && (
-              <>
-                <span className="hidden md:inline">•</span>
-                <span className="hidden md:inline first-letter:uppercase">{firstCategory}</span>
-              </>
-            )}
-          </div>
           
           <div className="space-y-2">
             <h3 className={cn(
@@ -112,6 +98,21 @@ const FeedItem = ({ item, variant = "default", className }) => {
             )}>
               {item.description}
             </p>
+          </div>
+
+          <div className={cn(
+            "flex items-center space-x-2 text-xs",
+            variant === 'featured' ? 'text-gray-200/70' : 'text-muted-foreground/70'
+          )}>
+            <span>{item.feed?.url ? getDomainFromUrl(item.feed.url) : 'Unknown Source'}</span>
+            <span>•</span>
+            <span>{item.pubDate ? format(new Date(item.pubDate)) : 'Unknown date'}</span>
+            {firstCategory && variant !== 'default' && (
+              <>
+                <span className="hidden md:inline">•</span>
+                <span className="hidden md:inline first-letter:uppercase">{firstCategory}</span>
+              </>
+            )}
           </div>
         </div>
       </Card>

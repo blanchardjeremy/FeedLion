@@ -67,7 +67,21 @@ const UserSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  preferences: {
+    maxItems: {
+      type: Number,
+      default: 30,
+      min: 1,
+      max: 1000
+    },
+    maxDays: {
+      type: Number,
+      default: 2,
+      min: 1,
+      max: 365
+    }
+  }
 }, { timestamps: true });
 
 // Create indexes for better query performance
