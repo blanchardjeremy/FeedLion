@@ -2,7 +2,19 @@ import { connectDB } from '@/lib/db';
 import { User, Feed, FeedItem } from '@/models';
 import Parser from 'rss-parser';
 
-const parser = new Parser();
+const parser = new Parser({
+  customFields: {
+    item: [
+      ['media:content', 'media:content', { keepArray: true }],
+      ['media:thumbnail', 'media:thumbnail', { keepArray: true }],
+      ['media:group', 'media:group'],
+      ['content:encoded', 'content:encoded']
+    ],
+  },
+  xml2js: {
+    arrays: ['media:content', 'media:thumbnail']
+  }
+});
 
 export async function GET(request, context) {
   console.log('🔄 [GET] /api/feeds/[userId]/refresh - Starting refresh');
@@ -52,6 +64,8 @@ export async function GET(request, context) {
         console.log('📝 Processing feed items...');
         const itemPromises = parsedFeed.items.map(async (item) => {
           // Create a standardized item object
+          console.log('Raw item data:', JSON.stringify(item, null, 2));
+          
           const feedItem = {
             feed: feed._id,
             guid: item.guid || item.id || item.link,
@@ -59,17 +73,129 @@ export async function GET(request, context) {
             link: item.link,
             description: item.description || item.contentSnippet,
             pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
-            content: item.content || item['content:encoded']
+            content: item.content || item['content:encoded'],
+            imageUrl: null,
+            categories: []
           };
 
-          // Update or create the feed item
-          const updatedItem = await FeedItem.findOneAndUpdate(
-            { guid: feedItem.guid },
-            feedItem,
-            { upsert: true, new: true }
-          );
+          // Extract categories
+          if (item.categories) {
+            feedItem.categories = Array.isArray(item.categories)
+              ? item.categories.map(cat => 
+                  // If category is an object with $ property (RSS format), get the text content
+                  typeof cat === 'object' && cat._ ? cat._ : cat
+                )
+              : [item.categories];
+          }
 
-          feedItems.push(updatedItem);
+          // Extract the largest image from media:content or media:thumbnail
+          const mediaContent = item['media:content'] || item.media?.content || item['media:group']?.['media:content'];
+          const mediaThumbnail = item['media:thumbnail'];
+          
+          let mediaItems = [];
+          
+          // Add media:content items
+          if (mediaContent) {
+            console.log(`🖼️ Found media:content for item: ${item.title}`);
+            console.log('Raw media:content:', JSON.stringify(mediaContent, null, 2));
+            
+            const contentItems = Array.isArray(mediaContent) ? mediaContent : [mediaContent];
+            // Filter out empty media:content items
+            mediaItems.push(...contentItems.filter(item => item && (item.$ || item.url)));
+          }
+          
+          // Add media:thumbnail items
+          if (mediaThumbnail) {
+            console.log(`🖼️ Found media:thumbnail for item: ${item.title}`);
+            console.log('Raw media:thumbnail:', JSON.stringify(mediaThumbnail, null, 2));
+            
+            const thumbnailItems = Array.isArray(mediaThumbnail) ? mediaThumbnail : [mediaThumbnail];
+            mediaItems.push(...thumbnailItems);
+          }
+          
+          if (mediaItems.length > 0) {
+            console.log(`📊 Number of media items: ${mediaItems.length}`);
+            console.log('Media items array:', JSON.stringify(mediaItems, null, 2));
+
+            // Find the image with the largest width
+            const largestImage = mediaItems.reduce((largest, current) => {
+              console.log('\nProcessing media item:', JSON.stringify(current, null, 2));
+              // Handle both formats: direct attributes or nested $ object
+              const currentAttrs = current.$ || current;
+              const largestAttrs = largest?.$ || largest;
+              
+              const currentWidth = parseInt(currentAttrs?.width || 0);
+              const largestWidth = parseInt(largestAttrs?.width || 0);
+              
+              console.log(`Current width: ${currentWidth}, Largest width so far: ${largestWidth}`);
+              return currentWidth > largestWidth ? current : largest;
+            }, null);
+
+            if (largestImage) {
+              // Handle both formats: direct url or nested $ object
+              const imageAttrs = largestImage.$ || largestImage;
+              feedItem.imageUrl = imageAttrs.url;
+              console.log(`✅ Selected image URL: ${feedItem.imageUrl}`);
+            } else {
+              console.log('❌ No valid image found in media items');
+            }
+          } else {
+            console.log(`ℹ️ No media items found for item: ${item.title}`);
+            
+            // Try to find image in content as fallback
+            if (item.content) {
+              console.log('🔍 Attempting to find image in content...');
+              const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
+              if (imgMatch) {
+                feedItem.imageUrl = imgMatch[1];
+                console.log(`✅ Found fallback image in content: ${feedItem.imageUrl}`);
+              } else {
+                console.log('❌ No image found in content');
+              }
+            }
+          }
+
+          console.log(`📝 Final feed item before save:`, {
+            title: feedItem.title,
+            guid: feedItem.guid,
+            imageUrl: feedItem.imageUrl
+          });
+
+          // Update or create the feed item
+          console.log('💾 Attempting to save feed item to database:', JSON.stringify(feedItem, null, 2));
+          
+          // First try to find the existing item
+          let existingItem = await FeedItem.findOne({ guid: feedItem.guid });
+          
+          let updatedItem;
+          if (existingItem) {
+            // If item exists, update it explicitly
+            existingItem.set({
+              ...feedItem,
+              imageUrl: feedItem.imageUrl // Explicitly set imageUrl
+            });
+            updatedItem = await existingItem.save();
+          } else {
+            // If item doesn't exist, create new one
+            updatedItem = await FeedItem.create({
+              ...feedItem,
+              imageUrl: feedItem.imageUrl // Explicitly set imageUrl
+            });
+          }
+          
+          // Convert to plain object for logging
+          const savedItem = updatedItem.toObject();
+          console.log('✅ Item saved to database. Updated item:', JSON.stringify(savedItem, null, 2));
+
+          // Verify the image URL was saved
+          if (savedItem.imageUrl !== feedItem.imageUrl) {
+            console.warn('⚠️ Warning: Saved imageUrl differs from original:', {
+              original: feedItem.imageUrl,
+              saved: savedItem.imageUrl
+            });
+          }
+
+          feedItems.push(savedItem);
         });
 
         await Promise.all(itemPromises);
@@ -108,13 +234,11 @@ export async function GET(request, context) {
         items: feedItems
       }
     });
-
   } catch (error) {
-    console.error('❌ Error refreshing feeds:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('❌ Error processing refresh request', error);
     return Response.json(
-      { error: 'Internal server error' },
+      { error: 'An error occurred while processing the refresh request' },
       { status: 500 }
     );
   }
-} 
+}

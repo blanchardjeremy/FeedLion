@@ -9,7 +9,7 @@ const Feed = async ({ userId }) => {
     const { data, error } = await fetchAPI(`/api/feeds/${userId}`, {
       method: 'GET',
     });
-    console.log('📦 API Response:', { data, error });
+    console.log('📦 User feed items API Response:', { data, error });
 
     if (error) {
       console.error('❌ Feed error:', error);
@@ -22,7 +22,7 @@ const Feed = async ({ userId }) => {
       );
     }
 
-    const items = data?.items || [];
+    const items = data?.data.items || [];
     console.log('📊 Feed items count:', items.length);
 
     if (items.length === 0) {

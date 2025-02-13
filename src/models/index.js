@@ -39,7 +39,12 @@ const FeedItemSchema = new mongoose.Schema({
   },
   description: String,
   pubDate: Date,
-  content: String
+  content: String,
+  imageUrl: {
+    type: String,
+    default: null
+  },
+  categories: [String]
 }, { timestamps: true });
 
 const UserSchema = new mongoose.Schema({

@@ -41,4 +41,10 @@ export async function fetchAPI(endpoint, { method = 'POST', body = null, headers
       error: err.message || 'Something went wrong',
     };
   }
+}
+
+export async function refreshFeeds(userId) {
+  return fetchAPI(`/api/feeds/${userId}/refresh`, {
+    method: 'GET'
+  });
 } 

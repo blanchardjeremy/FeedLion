@@ -29,20 +29,23 @@ const variants = {
   }
 }
 
-const FeedItem = ({ title, source, description, imageUrl, url, variant = "default", className }) => {
+
+
+
+
+const FeedItem = ({ title, source, description, imageUrl, link, variant = "default", className, feed }) => {
   const styles = variants[variant] || variants.default
 
   return (
-    <Link href={url} className="block">
+    <Link href={link} className="block">
       <Card className={cn(styles.card, className)}>
         {/* Image Container */}
         <div className={styles.imageContainer}>
-          <Image
+          <img
             src={imageUrl}
             alt={title}
-            fill
             className={cn(
-              "object-cover duration-300 ease-in-out transition-transform group-hover:scale-105",
+              "h-full w-full absolute inset-0 object-cover duration-300 ease-in-out transition-transform group-hover:scale-105",
               styles.image
             )}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -55,7 +58,7 @@ const FeedItem = ({ title, source, description, imageUrl, url, variant = "defaul
             "flex items-center space-x-2 text-sm",
             variant === 'featured' ? 'text-gray-200' : 'text-muted-foreground'
           )}>
-            <span className="font-medium">{source}</span>
+            <span className="font-medium">{feed?.title || 'Unknown Source'}</span>
             <span>•</span>
             <span>1 hour ago</span>
           </div>

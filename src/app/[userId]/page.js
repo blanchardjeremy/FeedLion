@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/db';
 import { User } from '@/models';
 import AddFeedForm from '@/components/AddFeedForm';
 import Feed from '@/components/Feed';
+import RefreshButton from '@/components/RefreshButton';
 
 export default async function UserFeedPage({ params }) {
   try {
@@ -25,7 +26,10 @@ export default async function UserFeedPage({ params }) {
 
     return (
       <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Your RSS Feeds</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Your RSS Feeds</h1>
+          <RefreshButton userId={userId} />
+        </div>
         
         {user.subscribedFeeds.length === 0 ? (
           <p className="text-gray-600">
