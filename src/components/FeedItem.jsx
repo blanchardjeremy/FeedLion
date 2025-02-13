@@ -3,6 +3,23 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
+// Domains that need image proxying
+const PROXY_DOMAINS = new Set([
+  'media.wired.com',
+])
+
+const getProxiedImageUrl = (url) => {
+  try {
+    const urlObj = new URL(url)
+    if (PROXY_DOMAINS.has(urlObj.hostname)) {
+      return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`
+    }
+    return url
+  } catch (e) {
+    return url
+  }
+}
+
 const variants = {
   default: {
     card: "group overflow-hidden transition-all hover:shadow-lg border-0",
@@ -29,10 +46,6 @@ const variants = {
   }
 }
 
-
-
-
-
 const FeedItem = ({ title, source, description, imageUrl, link, variant = "default", className, feed }) => {
   const styles = variants[variant] || variants.default
 
@@ -42,7 +55,7 @@ const FeedItem = ({ title, source, description, imageUrl, link, variant = "defau
         {/* Image Container */}
         <div className={styles.imageContainer}>
           <img
-            src={imageUrl}
+            src={getProxiedImageUrl(imageUrl)}
             alt={title}
             className={cn(
               "h-full w-full absolute inset-0 object-cover duration-300 ease-in-out transition-transform group-hover:scale-105",
