@@ -1,13 +1,15 @@
 import { connectDB } from '@/lib/db';
 import { Feed, User } from '@/models';
 
-export async function POST(request) {
+export async function POST(request, context) {
   try {
     await connectDB();
     
-    const { userId, feedUrl, feedTitle } = await request.json();
+    const params = await context.params;
+    const { userId } = params;
+    const { feedUrl, feedTitle } = await request.json();
 
-    if (!userId || !feedUrl) {
+    if (!feedUrl) {
       return Response.json(
         { error: 'Missing required fields' },
         { status: 400 }

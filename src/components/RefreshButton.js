@@ -36,17 +36,7 @@ export default function RefreshButton({ userId }) {
       variant="outline"
       size="sm"
     >
-      {isRefreshing ? (
-        <>
-          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-          Refreshing
-        </>
-      ) : (
-        <>
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh Feeds
-        </>
-      )}
+      <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
     </Button>
   );
 } 

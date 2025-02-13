@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { fetchAPI } from '@/lib/api';
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-export default function AddFeedForm({ userId }) {
+export default function AddFeedForm({ userId, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm({
@@ -25,23 +24,35 @@ export default function AddFeedForm({ userId }) {
   const onSubmit = async (data) => {
     setIsLoading(true);
 
-    const { error: apiError } = await fetchAPI('/api/feeds/subscribe', {
-      body: { feedUrl: data.feedUrl, userId }
-    });
+    try {
+      const response = await fetch(`/api/feeds/${userId}/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ feedUrl: data.feedUrl }),
+      });
 
-    if (apiError) {
-      form.setError('feedUrl', { message: apiError });
-    } else {
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error);
+      }
+
       form.reset();
+      if (onSuccess) {
+        onSuccess();
+      }
       window.location.reload();
+    } catch (error) {
+      form.setError('feedUrl', { message: error.message });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-bold mb-4">Add New Feed</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
           <FormField

@@ -44,7 +44,7 @@ const Feed = async ({ userId }) => {
         {items[0] && (
           <div className="col-span-full">
             <FeedItem
-              {...items[0]}
+              item={items[0]}
               variant="featured"
             />
           </div>
@@ -56,7 +56,7 @@ const Feed = async ({ userId }) => {
             {items.slice(1, 4).map((item) => (
               <FeedItem
                 key={item._id}
-                {...item}
+                item={item}
                 variant="default"
               />
             ))}
@@ -69,7 +69,7 @@ const Feed = async ({ userId }) => {
             {items.slice(4).map((item) => (
               <FeedItem
                 key={item._id}
-                {...item}
+                item={item}
                 variant="compact"
               />
             ))}
